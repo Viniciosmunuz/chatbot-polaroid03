@@ -183,7 +183,7 @@ client.on('message', async (msg) => {
     }
 
     // ESTADO 0 (INICIO) - Reseta ou Inicia a Conversa
-    if (!state && isInitialTrigger(body)) {
+    if (!state) {
       await client.sendMessage(from, getMenuText());
       userStages[from] = 'MENU_PRINCIPAL';
       return;
