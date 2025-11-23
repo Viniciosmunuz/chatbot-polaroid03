@@ -127,9 +127,16 @@ app.get('/', (req, res) => {
 // Iniciar servidor Express
 app.listen(PORT, () => {
   console.log(`\n🌐 Servidor web rodando em: http://localhost:${PORT}`);
-  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
-    console.log(`🌍 URL Pública: https://${process.env.RAILWAY_PUBLIC_DOMAIN}`);
-  }
+  
+  // Detectar URL pública do Railway
+  const publicUrl = process.env.RAILWAY_PUBLIC_DOMAIN || 
+                    process.env.RENDER_EXTERNAL_URL ||
+                    process.env.VERCEL_URL ||
+                    `localhost:${PORT}`;
+  
+  const protocol = publicUrl.includes('localhost') ? 'http' : 'https';
+  console.log(`🌍 URL Pública: ${protocol}://${publicUrl}`);
+  console.log(`📱 Acesse para ver o QR code: ${protocol}://${publicUrl}`);
   console.log('');
 });
 
@@ -160,6 +167,13 @@ const client = new Client(clientConfig);
 client.on('qr', qr => {
     currentQRCode = qr;
     
+    // Detectar URL pública
+    const publicUrl = process.env.RAILWAY_PUBLIC_DOMAIN || 
+                      process.env.RENDER_EXTERNAL_URL ||
+                      process.env.VERCEL_URL ||
+                      `localhost:${PORT}`;
+    const protocol = publicUrl.includes('localhost') ? 'http' : 'https';
+    
     console.log('\n' + '='.repeat(60));
     console.log('📱 QR CODE GERADO - Escaneie com seu WhatsApp');
     console.log('='.repeat(60) + '\n');
@@ -168,10 +182,9 @@ client.on('qr', qr => {
     console.log('⏰ QR code válido por ~1 minuto');
     console.log('='.repeat(60) + '\n');
     console.log(`🌐 Acesse: http://localhost:${PORT}`);
-    if (process.env.RAILWAY_PUBLIC_DOMAIN) {
-      console.log(`🌍 Ou acesse: https://${process.env.RAILWAY_PUBLIC_DOMAIN}`);
-    }
+    console.log(`🌍 Ou acesse: ${protocol}://${publicUrl}`);
     console.log('');
+
     
     // Gerar DataURL para servir via web
     QRCode.toDataURL(qr, {
