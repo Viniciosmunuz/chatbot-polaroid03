@@ -1,4 +1,12 @@
 {
+  "name": "chatbot-polaroid03",
+  "version": "1.0.0",
+  "description": "Bot WhatsApp para gerenciar pedidos de Polaroid e orçamentos de eventos",
+  "main": "chatbot.js",
+  "scripts": {
+    "start": "node chatbot.js",
+    "test": "node test-bot.js"
+  },
   "dependencies": {
     "dotenv": "^17.2.3",
     "moment-timezone": "^0.5.45",
