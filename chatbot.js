@@ -1,6 +1,6 @@
 require('dotenv').config();
 const qrcode = require('qrcode-terminal');
-const { Client, MessageMedia, LocalAuth } = require('whatsapp-web.js');
+const { Client, MessageMedia, LocalAuth, RemoteAuth } = require('whatsapp-web.js');
 const fs = require('fs');
 const path = require('path');
 
@@ -10,10 +10,23 @@ if (!fs.existsSync(SESSION_DIR)) {
   fs.mkdirSync(SESSION_DIR, { recursive: true });
 }
 
-// Inicializar client com persistência de sessão
-const client = new Client({
+// Configurar cliente com tratamento para Railway
+const clientConfig = {
   authStrategy: new LocalAuth({ clientId: 'polaroid-bot', dataPath: SESSION_DIR }),
-});
+  puppeteer: {
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--single-process', // Para Railway
+    ],
+  },
+};
+
+// Inicializar client com persistência de sessão
+const client = new Client(clientConfig);
 
 client.on('qr', qr => {
     console.log('\n📱 QR CODE GERADO - Escaneie com seu WhatsApp:\n');
@@ -27,13 +40,35 @@ client.on('ready', () => {
 
 client.on('disconnected', (reason) => {
     console.log('❌ Bot desconectado:', reason);
-    console.log('Tentando reconectar...');
+    console.log('Tentando reconectar em 10 segundos...');
     setTimeout(() => {
-        client.initialize();
+        try {
+            client.initialize();
+        } catch (err) {
+            console.error('Erro ao reconectar:', err);
+        }
+    }, 10000);
+});
+
+// Tratamento de erros não capturados
+process.on('unhandledRejection', (err) => {
+    console.error('❌ Erro não tratado:', err);
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('❌ Exceção não capturada:', err);
+    setTimeout(() => {
+        try {
+            client.initialize();
+        } catch (e) {
+            console.error('Erro crítico:', e);
+        }
     }, 5000);
 });
 
-client.initialize();
+client.initialize().catch(err => {
+    console.error('❌ Erro ao inicializar:', err);
+});
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
 // --- CONFIGURAÇÕES DE ESTADO E DADOS ---
