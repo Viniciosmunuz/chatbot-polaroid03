@@ -29,7 +29,6 @@ const client = new Client({
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
       '--disable-gpu',
-      '--single-process',
     ],
   },
 });
@@ -51,13 +50,6 @@ client.on('ready', () => {
 
 client.on('disconnected', (reason) => {
   console.log('❌ Bot desconectado:', reason);
-  setTimeout(() => {
-    try {
-      client.initialize();
-    } catch (err) {
-      console.error('Erro ao reconectar:', err);
-    }
-  }, 10000);
 });
 
 // ===== RESPOSTAS DO BOT =====
@@ -77,11 +69,24 @@ client.on('message', async msg => {
     const from = msg.from;
     const text = msg.body.toLowerCase().trim();
     
-    // Ignorar grupos
-    if (msg.isGroupMsg) return;
+    console.log(`📨 Mensagem de ${from}: "${msg.body}"`);
+    
+    // Ignorar grupos e status
+    if (msg.isGroupMsg || from.includes('@status')) {
+      console.log('⏭️ Ignorando (grupo ou status)');
+      return;
+    }
+    
+    // COMANDO DE TESTE
+    if (text === '!test') {
+      console.log('✅ Teste acionado!');
+      await msg.reply('✅ Bot está respondendo! Comando de teste funcionando.');
+      return;
+    }
     
     // Iniciar novo fluxo
-    if (['oi', 'olá', 'menu', 'oi!', 'tudo bem'].includes(text)) {
+    if (['oi', 'olá', 'menu', 'oi!', 'tudo bem', 'oi blz'].includes(text)) {
+      console.log('✅ Iniciando novo fluxo');
       userStages[from] = 'MENU_PRINCIPAL';
       await msg.reply(RESPONSES.MENU);
       return;
@@ -157,6 +162,9 @@ client.on('message', async msg => {
       }
       return;
     }
+    
+    // Resposta padrão se não reconhecer a mensagem
+    await msg.reply('🤖 Olá! Não entendi. Digite "menu" para ver as opções disponíveis.');
     
   } catch (err) {
     console.error('Erro ao processar mensagem:', err);
