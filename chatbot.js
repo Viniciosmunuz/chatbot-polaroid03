@@ -68,12 +68,19 @@ client.on('message', async msg => {
   try {
     const from = msg.from;
     const text = msg.body.toLowerCase().trim();
+    const contact = await msg.getContact();
     
     console.log(`📨 Mensagem de ${from}: "${msg.body}"`);
     
-    // Ignorar grupos e status
+    // Ignorar grupos, status e contatos salvos
     if (msg.isGroupMsg || from.includes('@status')) {
       console.log('⏭️ Ignorando (grupo ou status)');
+      return;
+    }
+    
+    // Ignorar contatos salvos
+    if (contact.isMyContact) {
+      console.log('⏭️ Ignorando (contato salvo)');
       return;
     }
     
