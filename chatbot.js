@@ -1,5 +1,6 @@
 require('dotenv').config();
 const qrcode = require('qrcode-terminal');
+const QRCode = require('qrcode');
 const { Client, MessageMedia, LocalAuth, RemoteAuth } = require('whatsapp-web.js');
 const fs = require('fs');
 const path = require('path');
@@ -31,6 +32,19 @@ const client = new Client(clientConfig);
 client.on('qr', qr => {
     console.log('\n📱 QR CODE GERADO - Escaneie com seu WhatsApp:\n');
     qrcode.generate(qr, {small: true});
+    
+    // Salvar QR code em arquivo PNG para Railway
+    QRCode.toFile('qrcode.png', qr, {
+      errorCorrectionLevel: 'H',
+      type: 'image/png',
+      quality: 0.95,
+      margin: 1,
+      width: 300,
+    }, (err) => {
+      if (!err) {
+        console.log('💾 QR code salvo em: qrcode.png');
+      }
+    });
 });
 
 client.on('ready', () => {
