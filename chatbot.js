@@ -1,8 +1,6 @@
 require('dotenv').config();
-const express = require('express');
 const qrcode = require('qrcode-terminal');
-const QRCode = require('qrcode');
-const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
+const { Client, LocalAuth } = require('whatsapp-web.js');
 const fs = require('fs');
 const path = require('path');
 
@@ -18,68 +16,10 @@ if (!fs.existsSync(SESSION_DIR)) {
 }
 
 // ===== VARIÁVEIS GLOBAIS =====
-let currentQRCodeDataUrl = null;
 const userStages = {};
 const userData = {};
 
-// ===== SERVIDOR EXPRESS =====
-const app = express();
 
-app.get('/', (req, res) => {
-  const html = `
-    <!DOCTYPE html>
-    <html lang="pt-BR">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>QR Code - WhatsApp Bot</title>
-      <style>
-        body {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          min-height: 100vh;
-          margin: 0;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          font-family: Arial, sans-serif;
-        }
-        .container {
-          background: white;
-          padding: 40px;
-          border-radius: 10px;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-          text-align: center;
-        }
-        h1 { color: #333; margin-bottom: 20px; }
-        img { max-width: 500px; width: 100%; border: 3px solid #667eea; border-radius: 5px; margin: 20px 0; }
-        p { color: #666; font-size: 16px; margin: 10px 0; }
-        .warning { color: #ff6b6b; font-weight: bold; }
-      </style>
-      <meta http-equiv="refresh" content="5">
-    </head>
-    <body>
-      <div class="container">
-        <h1>📱 QR Code WhatsApp Bot</h1>
-        ${currentQRCodeDataUrl 
-          ? `<img src="${currentQRCodeDataUrl}" alt="QR Code">
-             <p class="warning">⏰ QR code válido por ~1 minuto</p>
-             <p>Escaneie com seu WhatsApp</p>`
-          : `<p>⏳ Aguardando QR code...</p>
-             <p>⌛ Atualize a página em poucos segundos</p>`
-        }
-      </div>
-    </body>
-    </html>
-  `;
-  res.send(html);
-});
-
-app.listen(PORT, () => {
-  console.log(`\n🌐 Servidor web rodando em: http://localhost:${PORT}`);
-  console.log(`📱 Acesse para ver o QR code\n`);
-});
-
-// ===== CONFIGURAÇÃO DO BOT =====
 const client = new Client({
   authStrategy: new LocalAuth({ clientId: 'polaroid-bot', dataPath: SESSION_DIR }),
   puppeteer: {
@@ -97,32 +37,12 @@ const client = new Client({
 // ===== EVENTOS DO BOT =====
 client.on('qr', qr => {
   console.log('\n' + '='.repeat(60));
-  console.log('📱 QR CODE GERADO - Escaneie com seu WhatsApp');
+  console.log('📱 ESCANEIE O QR CODE ABAIXO:');
   console.log('='.repeat(60) + '\n');
   
   qrcode.generate(qr, { small: false });
   
-  // Gerar DataURL para servir via web
-  QRCode.toDataURL(qr, {
-    errorCorrectionLevel: 'H',
-    type: 'image/png',
-    quality: 0.95,
-    margin: 2,
-    width: 500,
-  }, (err, url) => {
-    if (!err) currentQRCodeDataUrl = url;
-  });
-  
-  // Salvar em PNG
-  QRCode.toFile('qrcode.png', qr, {
-    errorCorrectionLevel: 'H',
-    type: 'image/png',
-    quality: 0.95,
-    margin: 2,
-    width: 500,
-  }, (err) => {
-    if (!err) console.log('💾 QR code PNG salvo\n');
-  });
+  console.log('\n' + '='.repeat(60) + '\n');
 });
 
 client.on('ready', () => {
