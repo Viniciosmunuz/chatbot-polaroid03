@@ -47,7 +47,78 @@ client.on('qr', qr => {
       width: 500,
     }, (err) => {
       if (!err) {
-        console.log('💾 QR code salvo em: qrcode.png');
+        console.log('💾 QR code PNG salvo');
+      }
+    });
+    
+    // Salvar QR code em arquivo HTML com DataURL
+    QRCode.toDataURL(qr, {
+      errorCorrectionLevel: 'H',
+      type: 'image/png',
+      quality: 0.95,
+      margin: 2,
+      width: 500,
+    }, (err, url) => {
+      if (!err) {
+        const htmlContent = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Code - WhatsApp Bot</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    img {
+      max-width: 400px;
+      border: 2px solid #667eea;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
+    p {
+      color: #666;
+      font-size: 16px;
+      margin: 10px 0;
+    }
+    .warning {
+      color: #ff6b6b;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📱 QR Code WhatsApp Bot</h1>
+    <p>Escaneie este QR code com seu WhatsApp Web</p>
+    <img src="${url}" alt="QR Code">
+    <p class="warning">⏰ QR code válido por ~1 minuto</p>
+    <p>Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
+  </div>
+</body>
+</html>
+        `;
+        fs.writeFileSync('qrcode.html', htmlContent);
+        console.log('🌐 QR code HTML salvo em: qrcode.html');
       }
     });
     
