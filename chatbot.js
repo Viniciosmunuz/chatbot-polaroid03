@@ -1,14 +1,36 @@
 require('dotenv').config();
 const qrcode = require('qrcode-terminal');
-const { Client, MessageMedia } = require('whatsapp-web.js');
-const client = new Client();
+const { Client, MessageMedia, LocalAuth } = require('whatsapp-web.js');
+const fs = require('fs');
+const path = require('path');
+
+// Criar diretório de sessão se não existir
+const SESSION_DIR = path.join(__dirname, '.wwebjs_auth');
+if (!fs.existsSync(SESSION_DIR)) {
+  fs.mkdirSync(SESSION_DIR, { recursive: true });
+}
+
+// Inicializar client com persistência de sessão
+const client = new Client({
+  authStrategy: new LocalAuth({ clientId: 'polaroid-bot', dataPath: SESSION_DIR }),
+});
 
 client.on('qr', qr => {
+    console.log('\n📱 QR CODE GERADO - Escaneie com seu WhatsApp:\n');
     qrcode.generate(qr, {small: true});
 });
 
 client.on('ready', () => {
-    console.log('Tudo certo! WhatsApp conectado.');
+    console.log('✅ Bot WhatsApp conectado e pronto para usar!');
+    console.log('⏰ ' + new Date().toLocaleString('pt-BR'));
+});
+
+client.on('disconnected', (reason) => {
+    console.log('❌ Bot desconectado:', reason);
+    console.log('Tentando reconectar...');
+    setTimeout(() => {
+        client.initialize();
+    }, 5000);
 });
 
 client.initialize();

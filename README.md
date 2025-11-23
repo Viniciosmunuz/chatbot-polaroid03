@@ -30,7 +30,18 @@ O formato deve ser: `55` + `DDD` + `Número` + `@c.us` (sem espaços).
 node chatbot.js
 ```
 
-Na primeira execução, um **QR code** será exibido no terminal. Escaneie-o com a câmera do seu WhatsApp para autenticar.
+Na **primeira execução**, um **QR code** será exibido no terminal. Escaneie-o com a câmera do seu WhatsApp para autenticar.
+
+Após a primeira autenticação, a sessão é **salva localmente** (pasta `.wwebjs_auth/`). Nas próximas execuções, o bot reconecta automaticamente sem precisar escanear novamente.
+
+### Reconectar (gerar novo QR code)
+
+Se precisar reconectar com outra conta, delete a pasta `.wwebjs_auth/` e execute novamente:
+
+```bash
+rm -r .wwebjs_auth
+node chatbot.js
+```
 
 ## Funcionalidades
 
