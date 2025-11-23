@@ -30,19 +30,32 @@ const clientConfig = {
 const client = new Client(clientConfig);
 
 client.on('qr', qr => {
-    console.log('\n📱 QR CODE GERADO - Escaneie com seu WhatsApp:\n');
-    qrcode.generate(qr, {small: true});
+    console.log('\n' + '='.repeat(60));
+    console.log('📱 QR CODE GERADO - Escaneie com seu WhatsApp');
+    console.log('='.repeat(60) + '\n');
+    qrcode.generate(qr, {small: false});
+    console.log('\n' + '='.repeat(60));
+    console.log('⏰ QR code válido por ~1 minuto');
+    console.log('='.repeat(60) + '\n');
     
-    // Salvar QR code em arquivo PNG para Railway
+    // Salvar QR code em arquivo PNG
     QRCode.toFile('qrcode.png', qr, {
       errorCorrectionLevel: 'H',
       type: 'image/png',
       quality: 0.95,
-      margin: 1,
-      width: 300,
+      margin: 2,
+      width: 500,
     }, (err) => {
       if (!err) {
         console.log('💾 QR code salvo em: qrcode.png');
+      }
+    });
+    
+    // Salvar QR code em arquivo de texto ASCII
+    QRCode.toString(qr, {type: 'terminal', width: 30}, (err, string) => {
+      if (!err) {
+        fs.writeFileSync('qrcode.txt', string);
+        console.log('📄 QR code ASCII salvo em: qrcode.txt\n');
       }
     });
 });
