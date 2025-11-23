@@ -40,7 +40,7 @@ client.on('qr', qr => {
   console.log('📱 ESCANEIE O QR CODE ABAIXO:');
   console.log('='.repeat(60) + '\n');
   
-  qrcode.generate(qr, { small: false });
+  qrcode.generate(qr, { small: true });
   
   console.log('\n' + '='.repeat(60) + '\n');
 });
