@@ -1,9 +1,137 @@
 require('dotenv').config();
+const express = require('express');
 const qrcode = require('qrcode-terminal');
 const QRCode = require('qrcode');
 const { Client, MessageMedia, LocalAuth, RemoteAuth } = require('whatsapp-web.js');
 const fs = require('fs');
 const path = require('path');
+
+// --- VARIÁVEIS GLOBAIS PARA ARMAZENAR QR CODE ---
+let currentQRCode = null;
+let currentQRCodeDataUrl = null;
+
+// --- SERVIDOR EXPRESS PARA SERVIR O QR CODE ---
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+  if (!currentQRCodeDataUrl) {
+    return res.send(`
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>QR Code - WhatsApp Bot</title>
+        <style>
+          body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: Arial, sans-serif;
+          }
+          .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            text-align: center;
+          }
+          h1 { color: #333; }
+          p { color: #666; font-size: 16px; }
+          .loading { animation: spin 1s linear infinite; }
+          @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>📱 QR Code WhatsApp Bot</h1>
+          <p>⏳ Aguardando QR code...</p>
+          <p class="loading">⌛ Atualize a página em poucos segundos</p>
+          <meta http-equiv="refresh" content="3">
+        </div>
+      </body>
+      </html>
+    `);
+  }
+
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>QR Code - WhatsApp Bot</title>
+      <style>
+        body {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 100vh;
+          margin: 0;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          font-family: Arial, sans-serif;
+        }
+        .container {
+          background: white;
+          padding: 40px;
+          border-radius: 10px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+          text-align: center;
+        }
+        h1 {
+          color: #333;
+          margin-bottom: 20px;
+        }
+        img {
+          max-width: 500px;
+          width: 100%;
+          border: 3px solid #667eea;
+          border-radius: 5px;
+          margin: 20px 0;
+        }
+        p {
+          color: #666;
+          font-size: 16px;
+          margin: 10px 0;
+        }
+        .warning {
+          color: #ff6b6b;
+          font-weight: bold;
+          margin-top: 20px;
+        }
+        .status {
+          color: #28a745;
+          font-weight: bold;
+        }
+      </style>
+      <meta http-equiv="refresh" content="5">
+    </head>
+    <body>
+      <div class="container">
+        <h1>📱 QR Code WhatsApp Bot</h1>
+        <p>Escaneie este QR code com seu WhatsApp Web</p>
+        <img src="${currentQRCodeDataUrl}" alt="QR Code">
+        <p class="warning">⏰ QR code válido por ~1 minuto</p>
+        <p class="status">✅ Atualizando a cada 5 segundos</p>
+        <p>Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
+// Iniciar servidor Express
+app.listen(PORT, () => {
+  console.log(`\n🌐 Servidor web rodando em: http://localhost:${PORT}`);
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+    console.log(`🌍 URL Pública: https://${process.env.RAILWAY_PUBLIC_DOMAIN}`);
+  }
+  console.log('');
+});
 
 // Criar diretório de sessão se não existir
 const SESSION_DIR = path.join(__dirname, '.wwebjs_auth');
@@ -30,6 +158,8 @@ const clientConfig = {
 const client = new Client(clientConfig);
 
 client.on('qr', qr => {
+    currentQRCode = qr;
+    
     console.log('\n' + '='.repeat(60));
     console.log('📱 QR CODE GERADO - Escaneie com seu WhatsApp');
     console.log('='.repeat(60) + '\n');
@@ -37,6 +167,24 @@ client.on('qr', qr => {
     console.log('\n' + '='.repeat(60));
     console.log('⏰ QR code válido por ~1 minuto');
     console.log('='.repeat(60) + '\n');
+    console.log(`🌐 Acesse: http://localhost:${PORT}`);
+    if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+      console.log(`🌍 Ou acesse: https://${process.env.RAILWAY_PUBLIC_DOMAIN}`);
+    }
+    console.log('');
+    
+    // Gerar DataURL para servir via web
+    QRCode.toDataURL(qr, {
+      errorCorrectionLevel: 'H',
+      type: 'image/png',
+      quality: 0.95,
+      margin: 2,
+      width: 500,
+    }, (err, url) => {
+      if (!err) {
+        currentQRCodeDataUrl = url;
+      }
+    });
     
     // Salvar QR code em arquivo PNG
     QRCode.toFile('qrcode.png', qr, {
